@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Image Placeholder Instructions</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      .steps {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      code {
+        background-color: #f1f1f1;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+      .note {
+        background-color: #fff8e1;
+        padding: 10px 15px;
+        border-left: 4px solid #ffc107;
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Adding an Image to CursorCraft Homepage</h1>
+
+    <p>
+      The code has been updated to include an image in the homepage. Follow
+      these steps to add your own image:
+    </p>
+
+    <div class="steps">
+      <h2>Option 1: Use a placeholder service temporarily</h2>
+      <p>
+        Until you have your own image, you can use a placeholder image service:
+      </p>
+      <ol>
+        <li>
+          Download an 800x450 placeholder image from
+          <a
+            href="https://placehold.co/800x450/2563eb/ffffff?text=CursorCraft"
+            target="_blank"
+            >placehold.co</a
+          >
+        </li>
+        <li>
+          Save it as "hero-image.jpg" in the "public/images" folder of your
+          project
+        </li>
+      </ol>
+
+      <h2>Option 2: Use your own image</h2>
+      <ol>
+        <li>
+          Prepare an image with a 16:9 aspect ratio (ideally 800x450 pixels or
+          larger)
+        </li>
+        <li>
+          Name it "hero-image.jpg" (or update the code to match your filename)
+        </li>
+        <li>Place it in the "public/images" folder of your project</li>
+      </ol>
+    </div>
+
+    <div class="note">
+      <p><strong>Note:</strong> The image component is set up with:</p>
+      <ul>
+        <li><code>fill</code> property to fill its container</li>
+        <li>
+          <code>object-cover</code> class to maintain aspect ratio while
+          covering the area
+        </li>
+        <li>
+          Container has <code>aspect-video</code> (16:9 ratio) and rounded
+          corners
+        </li>
+      </ul>
+    </div>
+
+    <p>
+      After adding your image, run your development server with
+      <code>npm run dev</code> to see the changes.
+    </p>
+  </body>
+</html>
