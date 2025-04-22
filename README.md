@@ -107,3 +107,23 @@ Copyright (c) 2024 Mert Sukusu
 - LinkedIn: [@mertsukusu](https://www.linkedin.com/in/mertsukusu/)
 - Email: mertsukusu@gmail.com
 - GitHub: [@Mertsukusu](https://github.com/Mertsukusu)
+
+## Deployment
+
+The project can be deployed on Vercel, Netlify, or any hosting platform that supports Next.js applications.
+
+1. Set up environment variables for your production environment
+2. Deploy using your preferred hosting platform
+
+```bash
+npm run build
+```
+
+## Website
+
+The project is live at [https://www.cursor-craft.com/](https://www.cursor-craft.com/)
+
+## License
+
+This project is proprietary and not available for redistribution without permission.
+Copyright (c) 2024 Mert Sukusu

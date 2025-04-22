@@ -8,6 +8,9 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ExternalLink } from "lucide-react";
+import { generateAndStoreClientDocs } from "@/lib/project-docs";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 interface Project {
   id: string;
@@ -47,6 +50,9 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     async function fetchProject() {
@@ -77,6 +83,192 @@ export default function ProjectDetailPage() {
 
     fetchProject();
   }, [projectId, user]);
+
+  /**
+   * Downloads the project as a zip file
+   */
+  const downloadProject = async () => {
+    if (!project) return;
+    
+    setIsDownloading(true);
+    try {
+      // Create a new JSZip instance
+      const zip = new JSZip();
+      
+      // Create basic project structure
+      const rootFolder = zip.folder(project.name);
+      if (!rootFolder) throw new Error("Failed to create root folder");
+      
+      // Add README.md with project info
+      rootFolder.file("README.md", `# ${project.name}\n\n${project.description || 'No description provided.'}\n\n## Project Information\n\n- Type: ${project.template_type}\n- Framework: ${project.framework || 'N/A'}\n- Created: ${formatDate(project.created_at)}`);
+      
+      // Add package.json with basic configuration
+      const packageJson = {
+        name: project.name,
+        version: "0.1.0",
+        private: true,
+        description: project.description || "Generated project",
+        scripts: {
+          dev: "next dev",
+          build: "next build",
+          start: "next start",
+          lint: "next lint"
+        },
+        dependencies: {
+          "next": "^14.0.0",
+          "react": "^18.2.0",
+          "react-dom": "^18.2.0"
+        },
+        devDependencies: {
+          "typescript": "^5.0.0",
+          "@types/node": "^20.0.0",
+          "@types/react": "^18.2.0",
+          "@types/react-dom": "^18.2.0"
+        }
+      };
+      
+      rootFolder.file("package.json", JSON.stringify(packageJson, null, 2));
+      
+      // Add basic configuration files
+      rootFolder.file("tsconfig.json", `{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}`);
+      
+      // Create folder structure
+      const appFolder = rootFolder.folder("app");
+      const componentsFolder = rootFolder.folder("components");
+      const libFolder = rootFolder.folder("lib");
+      const publicFolder = rootFolder.folder("public");
+      
+      // Add basic app files
+      appFolder?.file("layout.tsx", `export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}`);
+      
+      appFolder?.file("page.tsx", `export default function Home() {
+  return (
+    <main>
+      <h1>${project.name}</h1>
+      <p>${project.description || 'Welcome to the project!'}</p>
+    </main>
+  )
+}`);
+      
+      // Generate and download the zip
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${project.name}.zip`);
+    } catch (err) {
+      console.error("Error downloading project:", err);
+      alert("Failed to download project. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  /**
+   * Regenerates the project docs
+   */
+  const regenerateProject = async () => {
+    if (!project) return;
+    
+    setIsRegenerating(true);
+    try {
+      // Create a simple project data object from what's available
+      const projectData = {
+        name: project.name,
+        description: project.description || "No description provided",
+        type: project.template_type || "unknown",
+        framework: project.framework || "Next.js",
+        selectedPackages: project.packages || [],
+        template: project.template || "Basic"
+      };
+      
+      // Regenerate the documents
+      const success = generateAndStoreClientDocs(projectData);
+      
+      if (success) {
+        alert("Project documentation regenerated successfully!");
+      } else {
+        throw new Error("Failed to regenerate project documentation");
+      }
+    } catch (err) {
+      console.error("Error regenerating project:", err);
+      alert("Failed to regenerate project. Please try again.");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  /**
+   * Deletes the project
+   */
+  const deleteProject = async () => {
+    if (!project || !user) return;
+    
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete the project "${project.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      const supabase = createSupabaseClient();
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // Navigate back to projects list
+      router.push('/projects');
+    } catch (err) {
+      console.error("Error deleting project:", err);
+      alert("Failed to delete project. Please try again.");
+      setIsDeleting(false);
+    }
+  };
+
+  /**
+   * Navigates to the edit project settings page
+   */
+  const editProjectSettings = () => {
+    router.push(`/projects/${projectId}/edit`);
+  };
 
   return (
     <ProtectedRoute>
@@ -157,9 +349,13 @@ export default function ProjectDetailPage() {
               <div className="border rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-bold">Project Code</h2>
-                  <Button className="flex items-center gap-2">
+                  <Button 
+                    className="flex items-center gap-2"
+                    onClick={downloadProject}
+                    disabled={isDownloading}
+                  >
                     <Download className="h-4 w-4" />
-                    <span>Download</span>
+                    <span>{isDownloading ? "Downloading..." : "Download"}</span>
                   </Button>
                 </div>
                 <p className="text-muted-foreground mb-4">
@@ -241,17 +437,31 @@ export default function ProjectDetailPage() {
               <div className="border rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Actions</h2>
                 <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={regenerateProject}
+                    disabled={isRegenerating}
+                  >
                     <span className="mr-2">🔄</span>
-                    <span>Regenerate Project</span>
+                    <span>{isRegenerating ? "Regenerating..." : "Regenerate Project"}</span>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={editProjectSettings}
+                  >
                     <span className="mr-2">✏️</span>
                     <span>Edit Project Settings</span>
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-red-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                    onClick={deleteProject}
+                    disabled={isDeleting}
+                  >
                     <span className="mr-2">🗑️</span>
-                    <span>Delete Project</span>
+                    <span>{isDeleting ? "Deleting..." : "Delete Project"}</span>
                   </Button>
                 </div>
               </div>

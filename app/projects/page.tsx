@@ -5,6 +5,9 @@ import Link from "next/link";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { Download } from "lucide-react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +53,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingProjectId, setDownloadingProjectId] = useState<string | null>(null);
   const supabase = createSupabaseClient();
 
   useEffect(() => {
@@ -75,6 +79,118 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, [user, supabase]);
+
+  /**
+   * Downloads the project as a zip file
+   */
+  const downloadProject = async (project: Project) => {
+    setDownloadingProjectId(project.id);
+    try {
+      // Create a new JSZip instance
+      const zip = new JSZip();
+      
+      // Create basic project structure
+      const rootFolder = zip.folder(project.name);
+      if (!rootFolder) throw new Error("Failed to create root folder");
+      
+      // Add README.md with project info
+      rootFolder.file("README.md", `# ${project.name}\n\n${project.description || 'No description provided.'}\n\n## Project Information\n\n- Type: ${project.template_type}\n- Framework: ${project.framework || 'N/A'}\n- Created: ${formatDate(project.created_at)}`);
+      
+      // Add package.json with basic configuration
+      const packageJson = {
+        name: project.name,
+        version: "0.1.0",
+        private: true,
+        description: project.description || "Generated project",
+        scripts: {
+          dev: "next dev",
+          build: "next build",
+          start: "next start",
+          lint: "next lint"
+        },
+        dependencies: {
+          "next": "^14.0.0",
+          "react": "^18.2.0",
+          "react-dom": "^18.2.0"
+        },
+        devDependencies: {
+          "typescript": "^5.0.0",
+          "@types/node": "^20.0.0",
+          "@types/react": "^18.2.0",
+          "@types/react-dom": "^18.2.0"
+        }
+      };
+      
+      rootFolder.file("package.json", JSON.stringify(packageJson, null, 2));
+      
+      // Add basic configuration files
+      rootFolder.file("tsconfig.json", `{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}`);
+      
+      // Create folder structure
+      const appFolder = rootFolder.folder("app");
+      const componentsFolder = rootFolder.folder("components");
+      const libFolder = rootFolder.folder("lib");
+      const publicFolder = rootFolder.folder("public");
+      
+      // Add basic app files
+      appFolder?.file("layout.tsx", `export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}`);
+      
+      appFolder?.file("page.tsx", `export default function Home() {
+  return (
+    <main>
+      <h1>${project.name}</h1>
+      <p>${project.description || 'Welcome to the project!'}</p>
+    </main>
+  )
+}`);
+      
+      // Generate and download the zip
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${project.name}.zip`);
+    } catch (err) {
+      console.error("Error downloading project:", err);
+      alert("Failed to download project. Please try again.");
+    } finally {
+      setDownloadingProjectId(null);
+    }
+  };
 
   const projectsToDisplay = projects.length > 0 ? projects : [];
   const hasNoProjects = projectsToDisplay.length === 0 && !isLoading;
@@ -160,8 +276,20 @@ export default function ProjectsPage() {
                         </Link>
                       </Button>
                     </div>
-                    <Button size="sm">
-                      Download
+                    <Button 
+                      size="sm" 
+                      onClick={() => downloadProject(project)}
+                      disabled={downloadingProjectId === project.id}
+                      className="flex items-center gap-1"
+                    >
+                      {downloadingProjectId === project.id ? (
+                        "Downloading..."
+                      ) : (
+                        <>
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
