@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { AuthStatus } from "@/components/auth/auth-status";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { TechIconsGrid } from "@/components/ui/tech-icons-grid";
 import { 
@@ -22,50 +21,47 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
-          <div className="mr-4 hidden md:flex">
+          <Link
+            href="/"
+            className="mr-6 flex items-center space-x-2 font-bold"
+          >
+            <div className="relative h-6 w-6">
+              <ImageWithFallback
+                src="/images/logo.svg"
+                alt="CursorCraft Logo"
+                fill
+                className="object-contain"
+                fallbackColor="#2563eb"
+              />
+            </div>
+            <span>CursorCraft</span>
+          </Link>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link
-              href="/"
-              className="mr-6 flex items-center space-x-2 font-bold"
+              href="/projects"
+              className="transition-colors hover:text-foreground/80"
             >
-              <div className="relative h-6 w-6">
-                <ImageWithFallback
-                  src="/images/logo.svg"
-                  alt="CursorCraft Logo"
-                  fill
-                  className="object-contain"
-                  fallbackColor="#2563eb"
-                />
-              </div>
-              <span>CursorCraft</span>
+              Projects
             </Link>
-            <nav className="flex items-center space-x-6 text-sm font-medium">
-              <Link
-                href="/projects"
-                className="transition-colors hover:text-foreground/80"
-              >
-                Projects
-              </Link>
-              <Link
-                href="/templates"
-                className="transition-colors hover:text-foreground/80"
-              >
-                Templates
-              </Link>
-              <Link
-                href="/prompts"
-                className="transition-colors hover:text-foreground/80"
-              >
-                Prompts
-              </Link>
-              <Link
-                href="/contact"
-                className="transition-colors hover:text-foreground/80"
-              >
-                Contact
-              </Link>
-            </nav>
-          </div>
-          <AuthStatus />
+            <Link
+              href="/templates"
+              className="transition-colors hover:text-foreground/80"
+            >
+              Templates
+            </Link>
+            <Link
+              href="/prompts"
+              className="transition-colors hover:text-foreground/80"
+            >
+              Prompts
+            </Link>
+            <Link
+              href="/contact"
+              className="transition-colors hover:text-foreground/80"
+            >
+              Contact
+            </Link>
+          </nav>
         </div>
       </header>
       <main className="flex-1">

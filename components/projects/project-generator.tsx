@@ -43,11 +43,6 @@ export function ProjectGenerator({ onProjectBasics, projectType }: ProjectGenera
       return;
     }
 
-    if (!user) {
-      setError("You must be logged in to create a project");
-      return;
-    }
-
     if (onProjectBasics) {
       // If in wizard flow, continue to next step
       onProjectBasics(projectName, projectDescription);
@@ -89,7 +84,7 @@ export function ProjectGenerator({ onProjectBasics, projectType }: ProjectGenera
             name: projectName,
             description: projectDescription || "No description provided",
             template_type: projectType,
-            user_id: user.id,
+            user_id: user.id === '00000000-0000-0000-0000-000000000000' ? null : user.id,
           }
         ])
         .select();
@@ -154,7 +149,7 @@ export function ProjectGenerator({ onProjectBasics, projectType }: ProjectGenera
       <CardFooter className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => router.push("/projects")}
+          onClick={() => router.push("/")}
         >
           Cancel
         </Button>

@@ -18,77 +18,29 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User>({
+    id: '00000000-0000-0000-0000-000000000000',
+    email: 'guest@example.com',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+  });
+  const [session, setSession] = useState<Session>({
+    access_token: 'mock-token',
+    refresh_token: 'mock-refresh-token',
+    expires_in: 3600,
+    token_type: 'bearer',
+    user: user,
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    };
-
-    getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event: AuthChangeEvent, session: Session | null) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-        router.refresh();
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router, supabase]);
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        return { error };
-      }
-      
-      return {};
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-        },
-      });
-
-      if (error) {
-        return { error };
-      }
-      
-      return {};
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
+  const signIn = async () => ({});
+  const signUp = async () => ({});
+  const signOut = async () => {};
 
   return (
     <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>

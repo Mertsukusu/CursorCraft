@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/auth/auth-provider";
+import { saveAs } from "file-saver";
 
 interface ProjectData {
   id: string;
@@ -34,6 +35,7 @@ export default function ProjectDocumentPage() {
   const [documentContent, setDocumentContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Map document type to title and key
   const documentMap: Record<string, { title: string, key: string }> = {
@@ -164,6 +166,36 @@ export default function ProjectDocumentPage() {
 
   const documentTitle = documentMap[documentType]?.title || "Document";
 
+  const handleDownloadMd = () => {
+    let filename = "Document.md";
+    switch (documentType) {
+      case "prd":
+        filename = "PRD.md";
+        break;
+      case "code-style":
+        filename = "CodeStyle.md";
+        break;
+      case "cursor-rules":
+        filename = ".cursorrules";
+        break;
+      case "progress":
+        filename = "ProgressTracker.md";
+        break;
+      default:
+        filename = `${documentTitle.replace(/\s+/g, "_")}.md`;
+    }
+    const blob = new Blob([documentContent], { type: "text/markdown;charset=utf-8" });
+    saveAs(blob, filename);
+  };
+
+  const handleCopy = async () => {
+    if (documentContent) {
+      await navigator.clipboard.writeText(documentContent);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="container py-10">
@@ -174,7 +206,15 @@ export default function ProjectDocumentPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{documentTitle}</h1>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              {documentTitle}
+              <Button variant="outline" size="sm" onClick={handleDownloadMd}>
+                Download as .md
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCopy}>
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </h1>
             {project && (
               <p className="text-muted-foreground">
                 {project.name}
