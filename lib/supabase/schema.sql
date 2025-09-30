@@ -1,12 +1,12 @@
--- Projects table
+-- Projects table (matching backup structure)
 CREATE TABLE public.projects (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   template_type TEXT NOT NULL,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   content JSONB DEFAULT '{}'::jsonb,
   status TEXT DEFAULT 'created'::text
 );

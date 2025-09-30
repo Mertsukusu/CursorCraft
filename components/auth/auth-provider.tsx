@@ -18,29 +18,105 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>({
-    id: '00000000-0000-0000-0000-000000000000',
-    email: 'guest@example.com',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    app_metadata: {},
-    user_metadata: {},
-    aud: 'authenticated',
-  });
-  const [session, setSession] = useState<Session>({
-    access_token: 'mock-token',
-    refresh_token: 'mock-refresh-token',
-    expires_in: 3600,
-    token_type: 'bearer',
-    user: user,
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  const signIn = async () => ({});
-  const signUp = async () => ({});
-  const signOut = async () => {};
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+        
+        if (event === 'SIGNED_IN' && session) {
+          router.refresh();
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          router.push('/');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { data };
+    } catch (error) {
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
+      return { data };
+    } catch (error) {
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setIsLoading(true);
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>

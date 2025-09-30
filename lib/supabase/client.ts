@@ -18,9 +18,31 @@ export const createSupabaseClient = () => {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "Missing Supabase credentials. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env file."
+    console.warn(
+      "Missing Supabase credentials. Using fallback configuration. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file."
     );
+    
+    // Return a mock client for development
+    return {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            order: () => Promise.resolve({ data: [], error: null }),
+            single: () => Promise.resolve({ data: null, error: { message: "Supabase not configured" } })
+          })
+        }),
+        insert: () => Promise.resolve({ error: { message: "Supabase not configured" } }),
+        update: () => Promise.resolve({ error: { message: "Supabase not configured" } }),
+        delete: () => Promise.resolve({ error: { message: "Supabase not configured" } })
+      }),
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        signInWithPassword: () => Promise.resolve({ error: { message: "Supabase not configured" } }),
+        signUp: () => Promise.resolve({ error: { message: "Supabase not configured" } }),
+        signOut: () => Promise.resolve({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      }
+    } as any;
   }
   
   supabaseClientInstance = createClient<Database>(supabaseUrl, supabaseAnonKey);
