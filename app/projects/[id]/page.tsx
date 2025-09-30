@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "@/lib/supabase/client";
-import { useAuth } from "@/components/auth/auth-provider";
-import { ProtectedRoute } from "@/components/auth/protected-route";
+// import { useAuth } from "@/components/auth/auth-provider";
+// import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ExternalLink } from "lucide-react";
 import { generateAndStoreClientDocs } from "@/lib/project-docs";
@@ -45,7 +45,8 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
   const router = useRouter();
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const user = null; // Disable authentication
   
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +57,7 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     async function fetchProject() {
-      if (!user) return;
+      // if (!user) return;
       
       try {
         const supabase = createSupabaseClient();
@@ -64,7 +65,7 @@ export default function ProjectDetailPage() {
           .from('projects')
           .select('*')
           .eq('id', projectId)
-          .eq('user_id', user.id)
+          // .eq('user_id', user.id) // Remove user filter
           .single();
 
         if (error) throw error;
@@ -249,8 +250,8 @@ export default function ProjectDetailPage() {
       const { error } = await supabase
         .from('projects')
         .delete()
-        .eq('id', projectId)
-        .eq('user_id', user.id);
+        .eq('id', projectId);
+        // .eq('user_id', user.id); // Remove user filter
       
       if (error) throw error;
       
@@ -271,7 +272,7 @@ export default function ProjectDetailPage() {
   };
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
       <div className="container py-10">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" size="icon" asChild>
@@ -469,6 +470,6 @@ export default function ProjectDetailPage() {
           </div>
         ) : null}
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 } 
