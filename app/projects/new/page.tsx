@@ -3,13 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ProjectGenerator } from "@/components/projects/project-generator";
-import { ProtectedRoute } from "@/components/auth/protected-route";
+// import { ProtectedRoute } from "@/components/auth/protected-route";
 import { FrameworkSelector } from "@/components/projects/framework-selector";
 import { PackageSelector } from "@/components/projects/package-selector";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabase/client";
-import { useAuth } from "@/components/auth/auth-provider";
+// import { useAuth } from "@/components/auth/auth-provider";
 import { generateAndStoreClientDocs } from "@/lib/project-docs";
 
 export type ProjectType = "web" | "api" | "cli" | "mobile";
@@ -61,7 +61,8 @@ export default function NewProjectPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const user = null; // Disable authentication
 
   const handleNext = () => {
     const steps: ProjectStep[] = ["basics", "platform", "framework", "packages", "template", "generate"];
@@ -115,10 +116,10 @@ export default function NewProjectPage() {
 
   // Generate the project and documentation files
   const generateProject = async () => {
-    if (!user) {
-      setError("You must be logged in to create a project");
-      return;
-    }
+    // if (!user) {
+    //   setError("You must be logged in to create a project");
+    //   return;
+    // }
 
     setIsGenerating(true);
     setError(null);
@@ -155,7 +156,7 @@ export default function NewProjectPage() {
           // framework: selectedFramework,
           // packages: selectedPackages,
           // template: selectedTemplate,
-          user_id: user.id,
+          user_id: null, // No authentication required
           created_at: new Date().toISOString()
         });
 
@@ -175,7 +176,7 @@ export default function NewProjectPage() {
   };
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
       <div className="container py-10">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -444,6 +445,6 @@ export default function NewProjectPage() {
           )}
         </div>
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 } 

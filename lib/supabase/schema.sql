@@ -11,28 +11,30 @@ CREATE TABLE public.projects (
   status TEXT DEFAULT 'created'::text
 );
 
--- Create RLS policies for projects
-ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+-- Disable RLS for public access
+-- ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
--- Policy for users to see only their own projects
-CREATE POLICY "Users can view their own projects" 
+-- Allow public access to projects (no authentication required)
+CREATE POLICY "Allow public access to projects" 
   ON public.projects 
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR ALL USING (true);
 
--- Policy for users to insert their own projects
-CREATE POLICY "Users can insert their own projects" 
-  ON public.projects 
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Commented out auth-based policies
+-- CREATE POLICY "Users can view their own projects" 
+--   ON public.projects 
+--   FOR SELECT USING (auth.uid() = user_id);
 
--- Policy for users to update their own projects
-CREATE POLICY "Users can update their own projects" 
-  ON public.projects 
-  FOR UPDATE USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can insert their own projects" 
+--   ON public.projects 
+--   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Policy for users to delete their own projects
-CREATE POLICY "Users can delete their own projects" 
-  ON public.projects 
-  FOR DELETE USING (auth.uid() = user_id);
+-- CREATE POLICY "Users can update their own projects" 
+--   ON public.projects 
+--   FOR UPDATE USING (auth.uid() = user_id);
+
+-- CREATE POLICY "Users can delete their own projects" 
+--   ON public.projects 
+--   FOR DELETE USING (auth.uid() = user_id);
 
 -- Templates table
 CREATE TABLE public.templates (

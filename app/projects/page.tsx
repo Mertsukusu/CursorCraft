@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseClient } from "@/lib/supabase/client";
-import { useAuth } from "@/components/auth/auth-provider";
-import { ProtectedRoute } from "@/components/auth/protected-route";
+// import { useAuth } from "@/components/auth/auth-provider";
+// import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Download } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -49,7 +49,8 @@ function formatDate(dateString: string): string {
  * @returns Projects page component
  */
 export default function ProjectsPage() {
-  const { user } = useAuth();
+  // const { user } = useAuth();
+  const user = null; // Disable authentication
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,13 +59,13 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     async function fetchProjects() {
-      if (!user) return;
+      // if (!user) return;
 
       try {
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .eq('user_id', user.id)
+          // .eq('user_id', user.id) // Remove user filter
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -196,7 +197,7 @@ export default function ProjectsPage() {
   const hasNoProjects = projectsToDisplay.length === 0 && !isLoading;
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
       <div className="container py-10">
         <div className="flex items-center justify-between">
           <div>
@@ -298,6 +299,6 @@ export default function ProjectsPage() {
           </>
         )}
       </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 } 
